@@ -17,6 +17,7 @@
     "daisyui": "^5.5.14",
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "js-base64": "^3.7.8",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
