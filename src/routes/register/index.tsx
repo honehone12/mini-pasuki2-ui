@@ -1,5 +1,5 @@
 import Loading from "@/components/Loading";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Base64 } from "js-base64";
 import { useTransition } from "react";
 
@@ -8,12 +8,18 @@ export const Route = createFileRoute("/register/")({
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const [pending, startTransition] = useTransition();
 
   function Form() {
     function action(form: FormData) {
       startTransition(async () => {
-        const res = await fetch("api/passkey/register/start", {
+        const email = form.get("email");
+        if (!email) {
+          throw new Error("invalid form data");
+        }
+
+        let res = await fetch("/api/passkey/register/start", {
           method: "POST",
           body: form,
         });
@@ -33,21 +39,31 @@ function RouteComponent() {
         }
 
         const attest = rawCred.response as AuthenticatorAttestationResponse;
-        const cred = {
-          id: rawCred.id,
-          type: rawCred.type,
-          authenticatorAttachment: rawCred.authenticatorAttachment,
-          response: {
-            attestationObject: Base64.fromUint8Array(
-              new Uint8Array(attest.attestationObject),
-              true,
-            ),
-            clientDataJson: Base64.fromUint8Array(
-              new Uint8Array(attest.clientDataJSON),
-              true,
-            ),
-          },
-        };
+        form = new FormData();
+        form.set("email", email);
+        form.set("id", rawCred.id);
+        form.set("type", rawCred.type);
+        form.set(
+          "attestationObject",
+          Base64.fromUint8Array(new Uint8Array(attest.attestationObject), true),
+        );
+        form.set(
+          "clientDataJson",
+          Base64.fromUint8Array(new Uint8Array(attest.clientDataJSON), true),
+        );
+        if (rawCred.authenticatorAttachment) {
+          form.set("authenticatorAttachment", rawCred.authenticatorAttachment);
+        }
+
+        res = await fetch("/api/passkey/register/finish", {
+          method: "POST",
+          body: form,
+        });
+        if (res.status !== 200) {
+          throw new Error(`status ${res.status}:${res.statusText}`);
+        }
+
+        navigate({ to: "/" });
       });
     }
 
