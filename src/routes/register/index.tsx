@@ -70,17 +70,32 @@ function RouteComponent() {
     return (
       <div className="text-center">
         <form action={action}>
-          <input
-            className="input validator w-70"
-            type="email"
-            name="email"
-            id="email"
-            aria-label="email"
-            required
-            disabled={pending}
-            placeholder="your@email.com"
-          />
-          <div className="validator-hint">Enter email address</div>
+          <label htmlFor="name">
+            <input
+              className="input validator w-70"
+              type="text"
+              name="name"
+              id="name"
+              aria-label="name"
+              required
+              disabled={pending}
+              placeholder="your name"
+            />
+            <div className="validator-hint">Enter name</div>
+          </label>
+          <label htmlFor="email">
+            <input
+              className="input validator w-70 mt-3"
+              type="email"
+              name="email"
+              id="email"
+              aria-label="email"
+              required
+              disabled={pending}
+              placeholder="your@email.com"
+            />
+            <div className="validator-hint">Enter email address</div>
+          </label>
           <button
             type="submit"
             disabled={pending}
