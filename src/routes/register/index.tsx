@@ -13,9 +13,14 @@ function RouteComponent() {
 
   function Form() {
     function action(form: FormData) {
+      function b64(a: ArrayBuffer): string {
+        return Base64.fromUint8Array(new Uint8Array(a), true);
+      }
+
       startTransition(async () => {
         const email = form.get("email");
-        if (!email) {
+        const name = form.get("name");
+        if (!email || !name) {
           throw new Error("invalid form data");
         }
 
@@ -31,28 +36,23 @@ function RouteComponent() {
         op.user.id = Base64.toUint8Array(op.user.id);
         op.challenge = Base64.toUint8Array(op.challenge);
 
-        const rawCred = (await navigator.credentials.create({
+        const cred = (await navigator.credentials.create({
           publicKey: op,
         })) as PublicKeyCredential | null;
-        if (!rawCred) {
+        if (!cred) {
           throw new Error("failed to create public key credential");
         }
 
-        const attest = rawCred.response as AuthenticatorAttestationResponse;
+        const attest = cred.response as AuthenticatorAttestationResponse;
         form = new FormData();
         form.set("email", email);
-        form.set("id", rawCred.id);
-        form.set("type", rawCred.type);
-        form.set(
-          "attestationObject",
-          Base64.fromUint8Array(new Uint8Array(attest.attestationObject), true),
-        );
-        form.set(
-          "clientDataJson",
-          Base64.fromUint8Array(new Uint8Array(attest.clientDataJSON), true),
-        );
-        if (rawCred.authenticatorAttachment) {
-          form.set("authenticatorAttachment", rawCred.authenticatorAttachment);
+        form.set("name", name);
+        form.set("id", cred.id);
+        form.set("type", cred.type);
+        form.set("clientDataJson", b64(attest.clientDataJSON));
+        form.set("attestationObject", b64(attest.attestationObject));
+        if (cred.authenticatorAttachment) {
+          form.set("authenticatorAttachment", cred.authenticatorAttachment);
         }
 
         res = await fetch("/api/passkey/register/finish", {
